@@ -1,7 +1,7 @@
 import simpy
-import procesos  # Código del Estudiante 1
-import cpu       # Código del Estudiante 2
-import analisis  # Código del Estudiante 3
+import procesos  
+import cpu      
+import analisis  
 
 # Pedir parámetros al usuario
 MEMORY_CAPACITY = int(input("Ingrese la capacidad de RAM: "))
