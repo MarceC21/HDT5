@@ -1,39 +1,35 @@
 """
 ===============================================================
-Simulación de Procesos en un Sistema Operativo (Manejo de Colas)
+Simulación de Tareas en un Sistema Operativo (Manejo de Colas)
 ===============================================================
-Autor: [Tu Nombre o Equipo]
-Fecha: [Fecha]
 Descripción:
-Este módulo genera procesos en un sistema operativo simulado usando SimPy.
-Los procesos requieren memoria RAM y esperan en una cola hasta que puedan ser atendidos por el CPU.
-Cada proceso solicita una cantidad aleatoria de memoria y un número aleatorio de instrucciones a ejecutar.
+Este módulo genera tareas en un sistema operativo simulado usando SimPy.
+Las tareas requieren memoria RAM y esperan en una cola hasta que puedan ser atendidas por la unidad de procesamiento.
+Cada tarea solicita una cantidad aleatoria de memoria y un número aleatorio de instrucciones a ejecutar.
 
-Este código solo maneja la **creación y gestión de procesos**.
-La ejecución en CPU se realiza en otro módulo (`cpu.py`).
+Este código solo maneja la **creación y gestión de tareas**.
+La ejecución en la unidad de procesamiento se realiza en otro módulo (`cpu.py`).
 
 ===============================================================
 """
 import random
 
-def generar_proceso(env, nombre, ram, cola_procesos):
-    """ Simula el ciclo de vida de un proceso en un sistema operativo """
-    memoria_requerida = random.randint(1, 10)
-    instrucciones_totales = random.randint(1, 10)
+def generar_tarea(env, identificador, memoria_virtual, cola_tareas):
+    """ Simula el ciclo de vida de una tarea en un sistema operativo """
+    memoria_solicitada = random.randint(1, 10)
+    total_instrucciones = random.randint(1, 10)
 
-    print(f"{env.now}: {nombre} llega al sistema (requiere {memoria_requerida} de RAM)")
+    print(f"{env.now}: {identificador} llega al sistema (requiere {memoria_solicitada} de RAM)")
 
     # Solicitar RAM (espera hasta obtenerla)
-    yield ram.get(memoria_requerida)
-    print(f"{env.now}: {nombre} obtiene {memoria_requerida} de RAM y está listo para ejecutarse")
+    yield memoria_virtual.get(memoria_solicitada)
+    print(f"{env.now}: {identificador} obtiene {memoria_solicitada} de RAM y está listo para ejecutarse")
 
-    # Agregar proceso a la cola para el CPU (espera en la cola hasta que CPU lo atienda)
-    cola_procesos.append((nombre, instrucciones_totales, memoria_requerida))
+    # Agregar tarea a la cola de ejecución
+    cola_tareas.append((identificador, total_instrucciones, memoria_solicitada))
 
-def iniciar_simulacion(env, ram, num_procesos, intervalo_llegada, cola_procesos):
-    """ Genera procesos siguiendo una distribución exponencial """
-    for i in range(num_procesos):
-        env.process(generar_proceso(env, f"Proceso-{i+1}", ram, cola_procesos))
+def iniciar_simulacion(env, memoria_virtual, num_tareas, intervalo_llegada, cola_tareas):
+    """ Genera tareas siguiendo una distribución exponencial """
+    for i in range(num_tareas):
+        env.process(generar_tarea(env, f"Tarea-{i+1}", memoria_virtual, cola_tareas))
         yield env.timeout(random.expovariate(1.0 / intervalo_llegada))
-
-

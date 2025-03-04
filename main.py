@@ -1,35 +1,46 @@
+"""
+===============================================================
+Simulación de un Sistema Operativo con Manejo de Tareas y CPU
+===============================================================
+Descripción:
+Este módulo principal coordina la simulación de un sistema operativo usando SimPy.
+Administra la memoria RAM, el procesador y la llegada de tareas al sistema.
+Las tareas se generan en `procesos.py`, se almacenan en una cola y luego se ejecutan en `cpu.py`.
+
+Este código **coordina la simulación completa** llamando a los módulos de generación y ejecución de tareas.
+
+===============================================================
+"""
 import simpy
 import procesos  
 import cpu      
 import analisis  
 
 # Pedir parámetros al usuario
-MEMORY_CAPACITY = int(input("Ingrese la capacidad de RAM: "))
-INTERVALO_LLEGADA = int(input("Ingrese el intervalo de llegada de los procesos: "))
-TOTAL_PROCESOS = int(input("Ingrese la cantidad total de procesos: "))
-CPU_VELOCIDAD = int(input("Ingrese la velocidad del CPU (instrucciones por unidad de tiempo): "))
+MEMORIA_MAXIMA = int(input("Ingrese la capacidad de RAM: "))
+INTERVALO_CREACION = int(input("Ingrese el intervalo de llegada de las tareas: "))
+TOTAL_TAREAS = int(input("Ingrese la cantidad total de tareas: "))
+VELOCIDAD_PROCESADOR = int(input("Ingrese la velocidad del procesador (instrucciones por unidad de tiempo): "))
 
-# Iniciar el entorno
-env = simpy.Environment()
-ram = simpy.Container(env, init=MEMORY_CAPACITY, capacity=MEMORY_CAPACITY)
-cola_procesos = []  # Cola compartida con cpu.py
-cPu = simpy.Resource(env, capacity=1)  # Un solo CPU, se puede modificar
+# Iniciar el entorno de simulación
+entorno = simpy.Environment()
+memoria_virtual = simpy.Container(entorno, init=MEMORIA_MAXIMA, capacity=MEMORIA_MAXIMA)
+cola_tareas = []  # Cola compartida con cpu.py
+procesador = simpy.Resource(entorno, capacity=1)  # Un solo núcleo, configurable
 
-# Iniciar simulación con procesos generados
-env.process(procesos.iniciar_simulacion(env, ram, TOTAL_PROCESOS, INTERVALO_LLEGADA, cola_procesos))
-env.run()
+# Iniciar simulación con las tareas generadas
+entorno.process(procesos.iniciar_simulacion(entorno, memoria_virtual, TOTAL_TAREAS, INTERVALO_CREACION, cola_tareas))
+entorno.run()
 
-# Mostrar los procesos generados en la cola
-print("\nProcesos listos para ser ejecutados en el CPU:")
-for proceso in cola_procesos:
-    print(proceso)
+# Mostrar las tareas generadas en la cola
+print("\nTareas en cola, listas para ejecución:")
+for tarea in cola_tareas:
+    print(tarea)
 
-# Una vez que los procesos están generados, los enviamos a la CPU
-for proceso in cola_procesos:
-    nombre, instrucciones, memoria = proceso
-    env.process(cpu.ejecutar_en_cpu(env, nombre, instrucciones, memoria, ram, cPu, CPU_VELOCIDAD))
+# Enviar las tareas generadas a la unidad de procesamiento
+for tarea in cola_tareas:
+    identificador, total_instrucciones, memoria_asignada = tarea
+    entorno.process(cpu.ejecutar_en_unidad(entorno, identificador, total_instrucciones, memoria_asignada, memoria_virtual, procesador, VELOCIDAD_PROCESADOR))
 
-# Ejecutar la simulación nuevamente para procesar los procesos en CPU
-env.run()
-
-
+# Ejecutar la simulación nuevamente para procesar las tareas
+entorno.run()
